@@ -181,11 +181,6 @@ LICENSE file.
     </dependency>
     <dependency>
       <groupId>site.ycsb</groupId>
-      <artifactId>mongodb-binding</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>site.ycsb</groupId>
       <artifactId>nosqldb-binding</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -241,7 +236,12 @@ LICENSE file.
     </dependency>
     <dependency>
       <groupId>site.ycsb</groupId>
-      <artifactId>solr7-binding</artifactId>
+      <artifactId>spark-iceberg-binding</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>site.ycsb</groupId>
+      <artifactId>spark-delta-binding</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

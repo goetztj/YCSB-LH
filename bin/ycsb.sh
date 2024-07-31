@@ -206,11 +206,11 @@ else
   done
 
   # Core dependency libraries
-  for f in "$YCSB_HOME"/core/target/dependency/*.jar ; do
-    if [ -r "$f" ] ; then
-      CLASSPATH="$CLASSPATH:$f"
-    fi
-  done
+  #for f in "$YCSB_HOME"/core/target/dependency/*.jar ; do
+  #  if [ -r "$f" ] ; then
+  #    CLASSPATH="$CLASSPATH:$f"
+  #  fi
+  #done
 
   # Database conf (need to find because location is not consistent)
   CLASSPATH_CONF=$(find "$YCSB_HOME"/$BINDING_DIR -name "conf" | while IFS="" read -r file; do echo ":$file"; done)
