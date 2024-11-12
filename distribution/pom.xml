@@ -236,12 +236,12 @@ LICENSE file.
     </dependency>
     <dependency>
       <groupId>site.ycsb</groupId>
-      <artifactId>spark-iceberg-binding</artifactId>
+      <artifactId>sparkIceberg-binding</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>site.ycsb</groupId>
-      <artifactId>spark-delta-binding</artifactId>
+      <artifactId>sparkDelta-binding</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
