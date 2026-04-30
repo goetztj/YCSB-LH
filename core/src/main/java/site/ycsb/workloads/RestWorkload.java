@@ -240,7 +240,7 @@ public class RestWorkload extends CoreWorkload {
   }
 
   @Override
-  public boolean doTransaction(DB db, Object threadstate) {
+  public boolean doTransaction(DB db, Object threadstate, int id) {
     String operation = operationchooser.nextString();
     if (operation == null) {
       return false;
@@ -248,7 +248,7 @@ public class RestWorkload extends CoreWorkload {
 
     switch (operation) {
     case "UPDATE":
-      doTransactionUpdate(db);
+      doTransactionUpdate(db, id);
       break;
     case "INSERT":
       doTransactionInsert(db);
@@ -257,7 +257,7 @@ public class RestWorkload extends CoreWorkload {
       doTransactionDelete(db);
       break;
     default:
-      doTransactionRead(db);
+      doTransactionRead(db, id);
     }
     return true;
   }
@@ -278,7 +278,7 @@ public class RestWorkload extends CoreWorkload {
   }
 
   @Override
-  public void doTransactionRead(DB db) {
+  public void doTransactionRead(DB db, int id) {
     HashMap<String, ByteIterator> result = new HashMap<String, ByteIterator>();
     db.read(null, getNextURL(1), null, result);
   }
@@ -296,7 +296,7 @@ public class RestWorkload extends CoreWorkload {
   }
 
   @Override
-  public void doTransactionUpdate(DB db) {
+  public void doTransactionUpdate(DB db, int id) {
     HashMap<String, ByteIterator> value = new HashMap<String, ByteIterator>();
     // Create random bytes of update data with a specific size.
     value.put("data", new RandomByteIterator(fieldlengthgenerator.nextValue().longValue()));

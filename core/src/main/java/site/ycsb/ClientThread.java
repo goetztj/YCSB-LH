@@ -119,7 +119,7 @@ public class ClientThread implements Runnable {
 
         while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
 
-          if (!workload.doTransaction(db, workloadstate)) {
+          if (!workload.doTransaction(db, workloadstate, threadid)) {
             break;
           }
 

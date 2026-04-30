@@ -181,6 +181,13 @@ public class CoreWorkload extends Workload {
    */
   public static final String WRITE_ALL_FIELDS_PROPERTY_DEFAULT = "false";
 
+  public static final String INTERVAL_GENERATOR_EXCLUSIVE_PROPERTY = "intervalexclusive";
+  public static final String INTERVAL_GENERATOR_EXCLUSIVE_DEFAULT = "0";
+
+  public static final String INTERVAL_GENERATOR_NUMINTERVAL_PROPERTY = "intervalcount";
+  public static final String INTERVAL_GENERATOR_NUMINTERVAL_DEFAULT = "1";
+
+
   protected boolean writeallfields;
 
   /**
@@ -485,6 +492,12 @@ public class CoreWorkload extends Workload {
       orderedinserts = true;
     }
 
+    long intervalCount =
+        Long.parseLong(p.getProperty(INTERVAL_GENERATOR_NUMINTERVAL_PROPERTY, INTERVAL_GENERATOR_NUMINTERVAL_DEFAULT));
+
+    long intervalExclusive =
+        Long.parseLong(p.getProperty(INTERVAL_GENERATOR_EXCLUSIVE_PROPERTY, INTERVAL_GENERATOR_EXCLUSIVE_DEFAULT));
+
     keysequence = new CounterGenerator(insertstart);
     operationchooser = createOperationGenerator(p);
 
@@ -501,7 +514,13 @@ public class CoreWorkload extends Workload {
       keychooser = new ExponentialGenerator(percentile, recordcount * frac);
     } else if (requestdistrib.compareTo("sequential") == 0) {
       keychooser = new SequentialGenerator(insertstart, insertstart + insertcount - 1);
-    } else if (requestdistrib.compareTo("zipfian") == 0) {
+    } else if (requestdistrib.compareTo("interval") == 0) {
+      // Assuming c, , and intervalExclusive are defined as longs or doubles
+      long l = (intervalCount == 0) ? 1 : 
+              (long) (recordcount / (1.0 + ((intervalCount - 1) * (1.0 - (intervalExclusive / 100.0)))));
+      long s = (long) (l - (l * (1.0 - (intervalExclusive / 100.0))));
+      keychooser = new IntervalGenerator(s, l, recordcount);
+    }else if (requestdistrib.compareTo("zipfian") == 0) {
       // it does this by generating a random "next key" in part by taking the modulus over the
       // number of keys.
       // If the number of keys changes, this would shift the modulus, and we don't want that to
@@ -653,7 +672,7 @@ public class CoreWorkload extends Workload {
    * have no side effects other than DB operations.
    */
   @Override
-  public boolean doTransaction(DB db, Object threadstate) {
+  public boolean doTransaction(DB db, Object threadstate, int id) {
     String operation = operationchooser.nextString();
     if(operation == null) {
       return false;
@@ -661,19 +680,19 @@ public class CoreWorkload extends Workload {
 
     switch (operation) {
     case "READ":
-      doTransactionRead(db);
+      doTransactionRead(db, id);
       break;
     case "UPDATE":
-      doTransactionUpdate(db);
+      doTransactionUpdate(db, id);
       break;
     case "INSERT":
       doTransactionInsert(db);
       break;
     case "SCAN":
-      doTransactionScan(db);
+      doTransactionScan(db, id);
       break;
     default:
-      doTransactionReadModifyWrite(db);
+      doTransactionReadModifyWrite(db, id);
     }
 
     return true;
@@ -705,7 +724,7 @@ public class CoreWorkload extends Workload {
     measurements.reportStatus("VERIFY", verifyStatus);
   }
 
-  long nextKeynum() {
+  long nextKeynum(int id) {
     long keynum;
     if (keychooser instanceof ExponentialGenerator) {
       do {
@@ -713,15 +732,15 @@ public class CoreWorkload extends Workload {
       } while (keynum < 0);
     } else {
       do {
-        keynum = keychooser.nextValue().intValue();
+        keynum = keychooser.nextValue(id).intValue();
       } while (keynum > transactioninsertkeysequence.lastValue());
     }
     return keynum;
   }
 
-  public void doTransactionRead(DB db) {
+  public void doTransactionRead(DB db, int id) {
     // choose a random key
-    long keynum = nextKeynum();
+    long keynum = nextKeynum(id);
 
     String keyname = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
 
@@ -746,9 +765,9 @@ public class CoreWorkload extends Workload {
     }
   }
 
-  public void doTransactionReadModifyWrite(DB db) {
+  public void doTransactionReadModifyWrite(DB db, int id) {
     // choose a random key
-    long keynum = nextKeynum();
+    long keynum = nextKeynum(id);
 
     String keyname = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
 
@@ -793,9 +812,9 @@ public class CoreWorkload extends Workload {
     measurements.measureIntended("READ-MODIFY-WRITE", (int) ((en - ist) / 1000));
   }
 
-  public void doTransactionScan(DB db) {
+  public void doTransactionScan(DB db, int id) {
     // choose a random key
-    long keynum = nextKeynum();
+    long keynum = nextKeynum(id);
 
     String startkeyname = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
 
@@ -815,9 +834,9 @@ public class CoreWorkload extends Workload {
     db.scan(table, startkeyname, len, fields, new Vector<HashMap<String, ByteIterator>>());
   }
 
-  public void doTransactionUpdate(DB db) {
+  public void doTransactionUpdate(DB db, int id) {
     // choose a random key
-    long keynum = nextKeynum();
+    long keynum = nextKeynum(id);
 
     String keyname = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
 
