@@ -75,10 +75,11 @@ public class LakeVillaTrinoAPIClient
   @Override
   public void init()
       throws DBException {
+    System.setProperty("arrow.enable_unsafe_memory_access", "false");
     Properties props = getProperties();
 
     String configPath = props.getProperty(LAKEVILLA_CONFIG, "/LakeVilla/lvconfig.conf");
-    String tablePath = props.getProperty(LAKEVILLA_TABLE_PATH, "warehouse/wh/usertable");
+    String tablePath = props.getProperty(LAKEVILLA_TABLE_PATH, "wh/ycsb.db/usertable/");
     singleTxn = Boolean.parseBoolean(props.getProperty(LAKEVILLA_SINGLE_TXN, "false"));
     resultFile = props.getProperty(RESULT_FILE, "./lakevilla_result");
 
@@ -111,7 +112,7 @@ public class LakeVillaTrinoAPIClient
     System.out.println("Initializing LakeVilla Native Transaction Manager...");
     try {
       transactionManager = new LakeVillaTransactionManager(levels, tablePath, configPath, 0);
-      tableId = transactionManager.openNewTable(tablePath);
+      tableId = 0;
 
       if (singleTxn) {
         System.out.println("Beginning persistent single-transaction context...");
